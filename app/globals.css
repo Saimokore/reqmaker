@@ -1,17 +1,19 @@
 @import "tailwindcss";
 
+/* --- 1. CONFIGURAÇÃO DO TEMA (Específico do V4) --- */
+@theme {
+  /* Define as variáveis que o Tailwind vai usar como classes (ex: bg-background) */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+/* --- 2. VARIÁVEIS DE COR (CSS Padrão) --- */
 :root {
   --background: #ffffff;
   --foreground: #171717;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
+/* Suporte a Dark Mode do sistema (opcional) */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -19,8 +21,71 @@
   }
 }
 
+/* --- 3. ESTILOS GLOBAIS --- */
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* --- 4. A FOLHA A4 (Seu estilo personalizado) --- */
+/* Usamos @layer utilities ou components para garantir a ordem correta, 
+   mas no v4 pode ficar solto também se estiver após o import. */
+
+.a4-paper {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 2.54cm; /* Margem padrão Word */
+  margin: 2rem auto;
+  background: white;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  
+  /* Forçar visual de impressão */
+  color: black;
+  font-family: 'Calibri', 'Arial', sans-serif;
+  font-size: 11pt;
+  line-height: 1.15;
+}
+
+/* Títulos dentro do papel */
+.a4-paper h1 { font-size: 16pt; font-weight: bold; margin-bottom: 12pt; }
+.a4-paper h2 { font-size: 14pt; font-weight: bold; margin-bottom: 10pt; }
+
+/* Tabelas dentro do papel */
+.a4-paper table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 11pt;
+}
+
+.a4-paper th, .a4-paper td {
+  border: 1px solid #000 !important;
+  padding: 4pt 6pt;
+  vertical-align: top;
+  font-size: 11pt;
+}
+
+/* --- 5. O SEGREDO DO "INVISÍVEL" --- */
+/* No Tailwind v4, o reset é agressivo. Precisamos garantir que os inputs
+   dentro da tabela A4 tenham estilo padrão transparente, mas mostrem o texto. */
+
+.a4-paper input, 
+.a4-paper textarea {
+  /* Garante que a fonte seja herdada (preta e Calibri) */
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit; 
+  width: 100%;
+  background: transparent;
+}
+
+/* Modo Preview: Remove qualquer resquício de borda de input que possa ter sobrado */
+.preview-mode input, 
+.preview-mode textarea {
+  border: none !important;
+  background: transparent !important;
+  resize: none;
+  padding: 0 !important;
+  margin: 0 !important;
+  outline: none !important; /* Remove o contorno azul de foco */
 }

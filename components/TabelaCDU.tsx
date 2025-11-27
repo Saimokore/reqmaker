@@ -1,203 +1,282 @@
 "use client";
 
-import React, { useState, ChangeEvent } from 'react';
+import React, { ChangeEvent } from 'react';
+import { Table, TableRow, TableCell, Paragraph, TextRun, AlignmentType, WidthType, TableLayoutType } from "docx";
 
-// 1. A INTERFACE (O "Molde" dos dados)
-// Isso é o equivalente a criar uma classe POJO/DTO no Java.
-// Define que nosso estado OBRIGATORIAMENTE tem que ter esses campos.
-interface DadosCDU {
-  id: string;
-  titulo: string;
-  modulo: string;
-  descricao: string;
-  atores: string;
-  preCondicoes: string;
-  fluxoPrincipal: string;
-  fluxosAlternativos: string;
-  fluxosExcecao: string;
-  posCondicoes: string;
+interface TabelaCDUProps {
+  indice: number;
+  data: CDUData; // Recebe o DTO preenchido
+  onUpdate: (newData: CDUData) => void; // Função para avisar o pai
+  readOnly?: boolean;
 }
 
-export default function TabelaCDU() {
+export default function TabelaCDU({ indice, data, onUpdate, readOnly = false }: TabelaCDUProps) {
   
-  // 2. O ESTADO TIPADO
-  // <DadosCDU> avisa ao React que essa variável 'dados' segue a interface acima.
-  const [dados, setDados] = useState<DadosCDU>({
-    id: "CDU01",
-    titulo: "",
-    modulo: "",
-    descricao: "",
-    atores: "",
-    preCondicoes: "",
-    fluxoPrincipal: "",
-    fluxosAlternativos: "",
-    fluxosExcecao: "",
-    posCondicoes: ""
-  });
+  // Formatando o ID baseado no índice (ex: 1 vira "CDU01", 10 vira "CDU10")
+  const idFormatado = `CDU${indice.toString().padStart(2, '0')}`;
 
-  // 3. O EVENTO TIPADO
-  // No Java seria (ActionEvent e). Aqui, precisamos dizer que o evento 'e'
-  // vem de um Input ou de um TextArea do HTML.
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setDados({ ...dados, [name]: value });
+    onUpdate({ ...data, [name]: value });
   };
 
   return (
-    <div className="border border-gray-400 my-4 shadow-lg max-w-4xl mx-auto bg-white">
+    <div className={`my-4 max-w-4xl mx-auto ${readOnly ? 'preview-mode' : 'shadow-lg bg-white'}`}>
       
-      {/* Cabeçalho */}
-      <div className="grid grid-cols-12 text-black border-b border-gray-400 bg-gray-100">
-        <div className="w-40 col-span-2 p-2 text-black border-r border-gray-400 font-bold text-center flex items-center justify-center">ID</div>
-        <div className="col-span-8 p-2 text-black border-r border-gray-400 font-bold text-center flex items-center justify-center">Título</div>
-        <div className="col-span-2 p-2 text-black font-bold text-center flex items-center justify-center">Módulo</div>
-      </div>
+      {/* Classe border-collapse faz as bordas ficarem "coladas" igual Excel */}
+      <table className="w-full border-collapse border border-gray-400">
+        
+        {/* --- CABEÇALHO --- */}
+        <thead>
+          <tr className="bg-gray-100">
+            {/* O ID agora é gerado automaticamente, mas visualmente parece um campo */}
+            <th className="border border-gray-400 p-2 w-24 text-black">ID</th>
+            <th className="border border-gray-400 p-2 text-black">Título</th>
+            <th className="border border-gray-400 p-2 w-48 text-black">Módulo</th>
+          </tr>
+        </thead>
 
-      {/* Inputs Cabeçalho */}
-      <div className="grid grid-cols-12 border-b border-gray-400">
-        <div className="w-40 col-span-2 border-r border-gray-400">
-          <input 
-            className="w-full text-black p-2 text-center font-bold outline-none focus:bg-blue-50"
-            name="id"
-            value={dados.id}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="col-span-8 border-r border-gray-400">
-          <input 
-            className="w-full text-black p-2 outline-none focus:bg-blue-50"
-            name="titulo"
-            value={dados.titulo}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="col-span-2">
-          <input 
-            className="w-full p-2 text-center font-bold text-black outline-none focus:bg-blue-50"
-            name="modulo"
-            value={dados.modulo}
-            onChange={handleChange}
-          />
-        </div>
-      </div>
+        <tbody>
+          {/* --- LINHA 1: Inputs do Cabeçalho --- */}
+          <tr>
+            <td className="border border-gray-400 p-0">
+              <input 
+                className="w-full p-2 text-center font-bold text-black outline-none bg-gray-50 cursor-not-allowed"
+                value={idFormatado}
+                disabled
+              />
+            </td>
+            <td className="border border-gray-400 p-0">
+              <input 
+                className="w-full p-2 outline-none text-black focus:bg-blue-50"
+                name="titulo"
+                placeholder="Ex: Manter Usuários"
+                value={data.titulo || ""}
+                onChange={handleChange}
+                disabled={readOnly}
+              />
+            </td>
+            <td className="border border-gray-400 p-0">
+              <input 
+                className="w-full p-2 text-center font-bold text-black outline-none focus:bg-blue-50"
+                name="modulo"
+                placeholder="Administrador"
+                value={data.modulo || ""}
+                onChange={handleChange}
+                disabled={readOnly}
+              />
+            </td>
+          </tr>
 
-      {/* Descrição */}
-      <div className="flex border-b border-gray-400">
-        <div className="w-40 p-2 font-bold bg-gray-50 text-black border-r border-gray-400 flex items-center">
-          Descrição
-        </div>
-        <div className="flex-1">
-          <textarea 
-            className="w-full field-sizing-content p-2 h-full overflow-auto outline-none text-black resize-none focus:bg-blue-50 block"
-            name="descricao"
-            placeholder="Descreva o caso de uso..."
-            value={dados.descricao}
+          {/* --- LINHAS DE CONTEÚDO (Label + TextArea/Input) --- */}
+          {/* Função auxiliar para criar linhas padronizadas */}
+          <RowTextArea 
+            label="Descrição" 
+            name="descricao" 
+            value={data.descricao || ""}
             onChange={handleChange}
+            disabled={readOnly} 
           />
-        </div>
-      </div>
-
-      {/* Atores */}
-      <div className="flex border-b border-gray-400">
-        <div className="w-40 p-2 font-bold text-black bg-gray-50 border-r border-gray-400 flex items-center">
-          Atores
-        </div>
-        <div className="flex-1">
-          <input 
-            className="w-full p-2 text-black outline-none focus:bg-blue-50"
-            name="atores"
-            placeholder="Atores envolvidos..."
-            value={dados.atores}
+          <RowInput 
+            label="Atores" 
+            name="atores" 
+            value={data.atores || ""}
             onChange={handleChange}
+            disabled={readOnly} 
           />
-        </div>
-      </div>
-
-      {/* Pré-condições */}
-      <div className="flex border-b border-gray-400">
-        <div className="w-40 p-2 font-bold text-black bg-gray-50 border-r border-gray-400 flex items-center">
-          Pré-condições
-        </div>
-        <div className="flex-1">
-          <input 
-            className="w-full p-2 text-black outline-none focus:bg-blue-50"
-            name="preCondicoes"
-            placeholder="Pré-condições para este CDU..."
-            value={dados.preCondicoes}
+          <RowTextArea
+            label="Pré-condições" 
+            name="preCondicoes" 
+            value={data.preCondicoes || ""}
             onChange={handleChange}
+            disabled={readOnly} 
           />
-        </div>
-      </div>
+          
+          {/* Fluxo Principal e Alternativos */}
+          <RowTextArea 
+             label="Fluxo Principal" 
+             name="fluxoPrincipal" 
+             value={data.fluxoPrincipal || ""}
+             onChange={handleChange}
+             disabled={readOnly} 
+             rows={4}
+          />
+          
+           <RowTextArea 
+             label="Fluxos Alternativos" 
+             name="fluxosAlternativos" 
+             value={data.fluxosAlternativos || ""}
+             onChange={handleChange}
+             disabled={readOnly} 
+             rows={3}
+          />
+          
+           <RowTextArea 
+             label="Fluxos de Exceção" 
+             name="fluxosExcecao" 
+             value={data.fluxosExcecao || ""}
+             onChange={handleChange}
+             disabled={readOnly} 
+             rows={2}
+          />
 
-      {/* Fluxo Principal */}
-      <div className="flex border-b border-gray-400">
-        <div className="w-40 p-2 font-bold text-black bg-gray-50 border-r border-gray-400 flex items-center">
-          Fluxo Principal
-        </div>
-        <div className="flex-1">
-          <input 
-            className="w-full p-2 text-black outline-none focus:bg-blue-50"
-            name="fluxoPrincipal"
-            placeholder="Fluxo principal deste CDU..."
-            value={dados.fluxoPrincipal}
+          <RowTextArea
+            label="Pós-condições" 
+            name="posCondicoes" 
+            value={data.posCondicoes || ""}
             onChange={handleChange}
+            disabled={readOnly} 
           />
-        </div>
-      </div>
 
-      {/* Fluxos Alternativos */}
-      <div className="flex border-b border-gray-400">
-        <div className="w-40 p-2 font-bold text-black bg-gray-50 border-r border-gray-400 flex items-center">
-          Fluxos Alternativos
-        </div>
-        <div className="flex-1">
-          <input 
-            className="w-full p-2 text-black outline-none focus:bg-blue-50"
-            name="fluxosAlternativos"
-            placeholder="Fluxos Alternativos deste CDU..."
-            value={dados.fluxosAlternativos}
-            onChange={handleChange}
-          />
-        </div>
-      </div>
+        </tbody>
+      </table>
 
-      {/* Fluxos Exceção */}
-      <div className="flex border-b border-gray-400">
-        <div className="w-40 p-2 font-bold text-black bg-gray-50 border-r border-gray-400 flex items-center">
-          Fluxos Exceção
-        </div>
-        <div className="flex-1">
-          <input 
-            className="w-full p-2 text-black outline-none focus:bg-blue-50"
-            name="fluxosExcecao"
-            placeholder="Fluxos Exceção deste CDU..."
-            value={dados.fluxosExcecao}
-            onChange={handleChange}
-          />
-        </div>
-      </div>
-
-      {/* Pós Condições */}
-      <div className="flex border-b border-gray-400">
-        <div className="w-40 p-2 font-bold text-black bg-gray-50 border-r border-gray-400 flex items-center">
-          Pós Condições
-        </div>
-        <div className="flex-1">
-          <input 
-            className="w-full p-2 text-black outline-none focus:bg-blue-50"
-            name="posCondicoes"
-            placeholder="Pós Condições deste CDU..."
-            value={dados.posCondicoes}
-            onChange={handleChange}
-          />
-        </div>
-      </div>
-
-      {/* Debug Area (Só pra gente ver funcionando) */}
-      <div className="bg-gray-800 text-white p-2 text-xs font-mono">
-        <span>TS State: {JSON.stringify(dados)}</span>
+      {/* Debug Area */}
+      <div className="bg-gray-800 text-white p-1 text-xs font-mono">
+        DATA: {idFormatado} - {JSON.stringify(data)}
       </div>
 
     </div>
   );
 }
+
+// --- Componentes Auxiliares para limpar o código ---
+
+function RowInput({ label, name, value, onChange }: any) {
+  return (
+    <tr>
+      <td className="border border-gray-400 p-2 font-bold bg-gray-50 text-black align-middle w-40">
+        {label}
+      </td>
+      <td colSpan={2} className="border border-gray-400 p-0">
+        <input 
+          className="w-full p-2 outline-none text-black focus:bg-blue-50"
+          name={name}
+          value={value}
+          onChange={onChange}
+        />
+      </td>
+    </tr>
+  );
+}
+
+function RowTextArea({ label, name, value, onChange, rows }: any) {
+  return (
+    <tr>
+      <td className="border border-gray-400 p-2 font-bold bg-gray-50 text-black align-top w-40 pt-3">
+        {label}
+      </td>
+      <td colSpan={2} className="max-w-1 border border-gray-400 p-0">
+        <textarea 
+          className="w-full resize-none field-sizing-content max-w-full p-2 outline-none text-black focus:bg-blue-50 block"
+          rows={rows}
+          name={name}
+          value={value}
+          onChange={onChange}
+        />
+      </td>
+    </tr>
+  );
+}
+
+export const exportarTabelaCDU = (data: CDUData, idVisual: string) => {
+  
+  const fontStyle = "Arial";
+  const fontSize = 20; // 10pt
+  const grayColor = "F2F2F2";
+
+  const cleanText = (t: string) => (t && t.trim() !== "") ? t : "\u200B";
+
+  // Helper corrigido: Agora o parametro 'align' aceita qualquer tipo de AlignmentType
+  const para = (text: string, align: (typeof AlignmentType)[keyof typeof AlignmentType] = AlignmentType.LEFT, bold = false) => 
+    new Paragraph({
+      alignment: align,
+      spacing: { before: 40, after: 40 },
+      children: [
+        new TextRun({ 
+          text: cleanText(text), // <--- AQUI ESTÁ A MÁGICA
+          font: fontStyle, 
+          size: fontSize, 
+          bold: bold 
+        })
+      ]
+    });
+
+  // Helper de Célula também tipado corretamente
+  const cell = (
+    text: string, 
+    bold = false, 
+    align: (typeof AlignmentType)[keyof typeof AlignmentType] = AlignmentType.LEFT, 
+    fill = "", 
+    colSpan = 1
+  ) => 
+    new TableCell({
+      columnSpan: colSpan,
+      shading: fill ? { fill: fill } : undefined,
+      verticalAlign: "center",
+      children: [para(text, align, bold)],
+      margins: {
+        top: -10,     // 200 TWIPs = ~0.17cm
+        bottom: -10,
+        left: 50,
+        right: 50,
+      },
+    });
+
+  const rowMerged = (label: string, value: string) => 
+    new TableRow({
+      children: [
+        // Aqui usamos AlignmentType.CENTER explicitamente
+        cell(label, true, AlignmentType.CENTER, grayColor), 
+        // Aqui usamos AlignmentType.LEFT explicitamente
+        cell(value, false, AlignmentType.LEFT, "", 2)       
+      ]
+    });
+
+  const col1 = 1800;
+  const col2 = 5200;
+  const col3 = 2000;
+
+  return new Table({
+    layout: TableLayoutType.FIXED,
+
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    columnWidths: [col1, col2, col3],
+    
+    rows: [
+      // Cabeçalhos
+      new TableRow({
+        children: [
+          cell("ID", true, AlignmentType.CENTER, "FFFFFF"),
+          cell("Título", true, AlignmentType.CENTER, "FFFFFF"),
+          cell("Módulo", true, AlignmentType.CENTER, "FFFFFF"),
+        ],
+      }),
+      // Valores Principais
+      new TableRow({
+        children: [
+          cell(idVisual, true, AlignmentType.CENTER),
+          cell(data.titulo, false, AlignmentType.LEFT),
+          cell(data.modulo, true, AlignmentType.CENTER),
+        ],
+      }),
+      // Linhas Detalhadas
+      rowMerged("Descrição", data.descricao),
+      rowMerged("Atores", data.atores),
+      rowMerged("Pré-condições", data.preCondicoes),
+      rowMerged("Fluxo Principal", data.fluxoPrincipal),
+      rowMerged("Fluxos Alternativos", data.fluxosAlternativos),
+      rowMerged("Fluxos de Exceção", data.fluxosExcecao),
+      rowMerged("Pós-condições", data.posCondicoes),
+    ],
+  });
+};
+
+export const PluginTexto: BlockPlugin = {
+  type: 'string',
+  label: '+ Imagem',
+  buttonColor: 'bg-purple-600 hover:bg-purple-700 text-white',
+  initialContent: { base64: "", legenda: "" },
+  Component: ComponenteVisual,
+  exporter: exportLogic
+};
